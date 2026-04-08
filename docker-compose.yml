@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: network-routing-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=0  # Use GPU if available
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    command: python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: network-routing-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    command: streamlit run app/dashboard/dashboard.py --server.port=8501 --server.address=0.0.0.0
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  models:
+  data:
